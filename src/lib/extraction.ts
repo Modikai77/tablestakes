@@ -60,7 +60,19 @@ export async function extractCandidates(source: SourceRecord): Promise<Omit<Cand
               items: {
                 type: "object",
                 additionalProperties: false,
-                required: ["name", "tags", "occasionTags", "confidence"],
+                required: [
+                  "name",
+                  "city",
+                  "neighbourhood",
+                  "address",
+                  "cuisine",
+                  "priceLevel",
+                  "tags",
+                  "occasionTags",
+                  "evidenceSnippet",
+                  "recommendationReason",
+                  "confidence"
+                ],
                 properties: {
                   name: { type: "string" },
                   city: { type: ["string", "null"] },
@@ -132,4 +144,3 @@ function heuristicExtract(source: SourceRecord) {
     recommendationReason: "Detected by local fallback extraction because OPENAI_API_KEY is not configured."
   }));
 }
-
