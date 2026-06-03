@@ -42,7 +42,7 @@ export async function findPlaceMatches(restaurant: Pick<RestaurantRecord, "name"
   });
 
   if (!searchResponse.ok) {
-    throw new Error(`Google Places lookup failed (${searchResponse.status}). Check GOOGLE_PLACES_API_KEY and Places API restrictions.`);
+    throw new Error(`Google Places lookup failed (${searchResponse.status}). ${await readGoogleError(searchResponse)}`);
   }
 
   const data = (await searchResponse.json()) as {
@@ -82,4 +82,16 @@ function mapGooglePrice(price?: string) {
   if (!price) return undefined;
   const match = price.match(/[1-4]/);
   return match ? Number(match[0]) : undefined;
+}
+
+async function readGoogleError(response: Response) {
+  try {
+    const data = (await response.json()) as { error?: { message?: string; status?: string; details?: Array<{ reason?: string; metadata?: Record<string, string> }> } };
+    const message = data.error?.message;
+    const status = data.error?.status;
+    const reason = data.error?.details?.map((detail) => detail.reason).filter(Boolean).join(", ");
+    return [message, status, reason].filter(Boolean).join(" ") || "Check GOOGLE_PLACES_API_KEY, billing, enabled APIs, and API key restrictions.";
+  } catch {
+    return "Check GOOGLE_PLACES_API_KEY, billing, enabled APIs, and API key restrictions.";
+  }
 }
