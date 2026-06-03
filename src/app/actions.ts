@@ -60,8 +60,14 @@ export async function rejectCandidateAction(sourceId: string, candidateId: strin
 }
 
 export async function enrichRestaurantAction(id: string) {
-  await enrichRestaurant(id);
-  redirect(`/restaurants/${id}`);
+  let notice = "enriched";
+  try {
+    const match = await enrichRestaurant(id);
+    if (!match) notice = "No Google Places match found.";
+  } catch (error) {
+    notice = error instanceof Error ? error.message : "Enrichment failed";
+  }
+  redirect(`/restaurants/${id}?notice=${encodeURIComponent(notice)}`);
 }
 
 export async function addVisitAction(restaurantId: string, formData: FormData) {
@@ -94,7 +100,14 @@ export async function createListAction(formData: FormData) {
 
 export async function addRestaurantToListAction(restaurantId: string, formData: FormData) {
   const listId = asString(formData.get("listId"));
-  if (listId) await addRestaurantToList(listId, restaurantId);
+  if (listId === "__create_new_list__") {
+    const list = await createRestaurantList({
+      name: asString(formData.get("newListName")) ?? "Untitled list"
+    });
+    await addRestaurantToList(list.id, restaurantId);
+  } else if (listId) {
+    await addRestaurantToList(listId, restaurantId);
+  }
   redirect(`/restaurants/${restaurantId}`);
 }
 

@@ -637,8 +637,10 @@ export async function createRestaurantList(input: { name: string; description?: 
   const user = await requireUser();
   const db = getPrisma();
   if (db) {
-    const list = await db.restaurantList.create({
-      data: {
+    const list = await db.restaurantList.upsert({
+      where: { userId_name: { userId: user.id, name: input.name } },
+      update: input.description === undefined ? {} : { description: input.description },
+      create: {
         userId: user.id,
         name: input.name,
         description: input.description
@@ -648,6 +650,9 @@ export async function createRestaurantList(input: { name: string; description?: 
     revalidateAll();
     return mapList(list);
   }
+
+  const existing = state(user.id).lists.find((list) => normalise(list.name) === normalise(input.name));
+  if (existing) return existing;
 
   const now = new Date();
   const list: RestaurantListRecord = {

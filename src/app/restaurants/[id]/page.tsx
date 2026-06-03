@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, ExternalLink, ListPlus, MapPin, Pencil, Sparkles, Star, Trash } from "lucide-react";
+import { CalendarDays, CircleAlert, CircleCheck, ExternalLink, MapPin, Pencil, Sparkles, Star, Trash } from "lucide-react";
+import { AddToListForm } from "@/components/AddToListForm";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { VisitForm } from "@/components/VisitForm";
 import { addRestaurantToListAction, deleteRestaurantAction, enrichRestaurantAction } from "@/app/actions";
@@ -8,11 +9,14 @@ import { getRestaurant, listRestaurantLists } from "@/lib/store";
 import { formatDate, priceLabel } from "@/lib/utils";
 
 export default async function RestaurantDetailPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const { id } = await params;
+  const notice = asSingle((await searchParams).notice);
   const [restaurant, lists] = await Promise.all([getRestaurant(id), listRestaurantLists()]);
   if (!restaurant) notFound();
   const enrichAction = enrichRestaurantAction.bind(null, restaurant.id);
@@ -60,6 +64,8 @@ export default async function RestaurantDetailPage({
         </div>
       </section>
 
+      {notice ? <Notice message={notice} /> : null}
+
       <section className="grid gap-4 md:grid-cols-[1.4fr_0.8fr]">
         <div className="panel p-4">
           <h2 className="font-semibold">Memory</h2>
@@ -81,23 +87,7 @@ export default async function RestaurantDetailPage({
             <Row label="Maps" value={restaurant.googleMapsUrl ? <Link className="underline" href={restaurant.googleMapsUrl}>Open <ExternalLink className="inline" size={12} /></Link> : null} />
             <Row label="Enrichment" value={restaurant.enrichmentConfidence ? `${Math.round(restaurant.enrichmentConfidence * 100)}% confidence` : "Not enriched"} />
           </dl>
-          <form action={addToListAction} className="mt-5 grid gap-2">
-            <label className="field">
-              <span className="label">Add to list</span>
-              <select className="input" name="listId" defaultValue="">
-                <option value="">Choose a list</option>
-                {lists.map((list) => (
-                  <option value={list.id} key={list.id}>
-                    {list.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <button className="button secondary w-fit" type="submit">
-              <ListPlus size={16} />
-              Add
-            </button>
-          </form>
+          <AddToListForm action={addToListAction} lists={lists} />
         </div>
       </section>
 
@@ -140,4 +130,18 @@ function Row({ label, value }: { label: string; value?: React.ReactNode | null }
       <dd>{value || "—"}</dd>
     </div>
   );
+}
+
+function Notice({ message }: { message: string }) {
+  const successful = message === "enriched";
+  return (
+    <div className={`panel flex items-start gap-2 p-3 text-sm ${successful ? "text-[var(--accent)]" : "text-[var(--accent-2)]"}`}>
+      {successful ? <CircleCheck className="mt-0.5 shrink-0" size={16} /> : <CircleAlert className="mt-0.5 shrink-0" size={16} />}
+      <span>{successful ? "Restaurant details enriched." : message}</span>
+    </div>
+  );
+}
+
+function asSingle(value?: string | string[]) {
+  return Array.isArray(value) ? value[0] : value;
 }
