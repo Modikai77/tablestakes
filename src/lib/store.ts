@@ -760,9 +760,13 @@ async function uploadImage(file: File | null | undefined, folder: string) {
   if (!file || file.size === 0) return undefined;
   if (!file.type.startsWith("image/")) throw new Error("Only image uploads are supported.");
   if (file.size > 8 * 1024 * 1024) throw new Error("Images must be 8MB or smaller.");
-  if (!process.env.BLOB_READ_WRITE_TOKEN) return `/uploads/demo-${Date.now()}-${file.name}`;
+  if (!blobUploadsConfigured()) return `/uploads/demo-${Date.now()}-${file.name}`;
   const blob = await put(`${folder}/${Date.now()}-${file.name}`, file, { access: "public" });
   return blob.url;
+}
+
+function blobUploadsConfigured() {
+  return Boolean(process.env.BLOB_READ_WRITE_TOKEN || process.env.BLOB_STORE_ID);
 }
 
 function mapRestaurant(raw: any): RestaurantRecord {

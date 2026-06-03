@@ -32,10 +32,13 @@ GOOGLE_CLIENT_ID="..."
 GOOGLE_CLIENT_SECRET="..."
 OPENAI_API_KEY="sk-..."
 GOOGLE_PLACES_API_KEY="..."
-BLOB_READ_WRITE_TOKEN="vercel_blob_rw_..."
+BLOB_STORE_ID="store_..."
+BLOB_READ_WRITE_TOKEN="vercel_blob_rw_..." # legacy token auth; optional when Vercel Blob OIDC is connected
 NEXTAUTH_URL="http://localhost:3000"
 NEXTAUTH_SECRET="generate-a-long-random-secret"
 ```
+
+For Vercel Blob, new Vercel project connections may use OIDC and add `BLOB_STORE_ID` plus `BLOB_WEBHOOK_PUBLIC_KEY` instead of `BLOB_READ_WRITE_TOKEN`. The app supports either `BLOB_STORE_ID` for Vercel OIDC uploads or the legacy `BLOB_READ_WRITE_TOKEN`. If neither is present, local uploads use demo placeholder URLs.
 
 In Google Cloud Console, create an OAuth client and add this authorized redirect URI:
 
