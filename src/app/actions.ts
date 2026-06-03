@@ -49,9 +49,9 @@ export async function processSourceAction(id: string) {
   redirect(`/sources/${id}`);
 }
 
-export async function approveCandidateAction(candidateId: string, formData: FormData) {
-  const restaurantId = await approveCandidate(candidateId, asString(formData.get("mergeRestaurantId")));
-  redirect(`/restaurants/${restaurantId}`);
+export async function approveCandidateAction(sourceId: string, candidateId: string, formData: FormData) {
+  await approveCandidate(candidateId, asString(formData.get("mergeRestaurantId")));
+  redirect(`/sources/${sourceId}`);
 }
 
 export async function rejectCandidateAction(sourceId: string, candidateId: string) {

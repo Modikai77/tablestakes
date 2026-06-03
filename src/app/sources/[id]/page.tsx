@@ -14,6 +14,7 @@ export default async function SourceDetailPage({
   const [source, restaurants] = await Promise.all([getSource(id), listRestaurants({})]);
   if (!source) notFound();
   const processAction = processSourceAction.bind(null, source.id);
+  const pendingCandidates = source.candidates.filter((candidate) => candidate.status === "pending");
 
   return (
     <div className="grid gap-6">
@@ -39,9 +40,9 @@ export default async function SourceDetailPage({
       </section>
 
       <section className="grid gap-3">
-        <h2 className="text-xl font-semibold">Candidates</h2>
-        {source.candidates.map((candidate) => {
-          const approveAction = approveCandidateAction.bind(null, candidate.id);
+        <h2 className="text-xl font-semibold">Restaurants to review</h2>
+        {pendingCandidates.map((candidate) => {
+          const approveAction = approveCandidateAction.bind(null, source.id, candidate.id);
           const rejectAction = rejectCandidateAction.bind(null, source.id, candidate.id);
           return (
             <article className="panel grid gap-4 p-4" key={candidate.id}>
@@ -91,7 +92,7 @@ export default async function SourceDetailPage({
             </article>
           );
         })}
-        {!source.candidates.length ? <div className="panel p-6 text-[var(--muted)]">Run extraction to review candidates.</div> : null}
+        {!pendingCandidates.length ? <div className="panel p-6 text-[var(--muted)]">{source.candidates.length ? "All extracted restaurants have been reviewed." : "Run extraction to review candidates."}</div> : null}
       </section>
     </div>
   );
