@@ -1,9 +1,10 @@
 import { notFound } from "next/navigation";
-import { Check, X } from "lucide-react";
+import { Check, CircleAlert, X } from "lucide-react";
 import { approveCandidateAction, processSourceAction, rejectCandidateAction } from "@/app/actions";
 import { ProcessSourceButton } from "@/components/ProcessSourceButton";
 import { getSource, listRestaurants } from "@/lib/store";
 import { priceLabel } from "@/lib/utils";
+import type { CandidateRecord, RestaurantRecord } from "@/lib/types";
 
 export default async function SourceDetailPage({
   params
@@ -42,6 +43,7 @@ export default async function SourceDetailPage({
       <section className="grid gap-3">
         <h2 className="text-xl font-semibold">Restaurants to review</h2>
         {pendingCandidates.map((candidate) => {
+          const duplicate = findLikelyDuplicate(candidate, restaurants);
           const approveAction = approveCandidateAction.bind(null, source.id, candidate.id);
           const rejectAction = rejectCandidateAction.bind(null, source.id, candidate.id);
           return (
@@ -53,13 +55,20 @@ export default async function SourceDetailPage({
                     <span className="chip">{Math.round(candidate.confidence * 100)}% confidence</span>
                     {candidate.cuisine ? <span className="chip">{candidate.cuisine}</span> : null}
                     <span className="chip">{priceLabel(candidate.priceLevel)}</span>
+                    {duplicate ? (
+                      <span className="chip text-[var(--accent-2)]">
+                        <CircleAlert size={13} />
+                        Likely already in library
+                      </span>
+                    ) : null}
                   </div>
                   <h3 className="mt-3 text-xl font-semibold">{candidate.name}</h3>
                   <p className="mt-1 text-sm text-[var(--muted)]">{[candidate.neighbourhood, candidate.city, candidate.address].filter(Boolean).join(", ")}</p>
+                  {duplicate ? <p className="mt-2 text-sm text-[var(--accent-2)]">Possible match: {duplicate.name}{duplicate.city ? `, ${duplicate.city}` : ""}. Approving will merge into this restaurant unless you choose another option.</p> : null}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <form action={approveAction} className="flex gap-2">
-                    <select className="input min-w-44" name="mergeRestaurantId" defaultValue="">
+                    <select className="input min-w-44" name="mergeRestaurantId" defaultValue={duplicate?.id ?? ""}>
                       <option value="">Save as new or auto-merge</option>
                       {restaurants.map((restaurant) => (
                         <option value={restaurant.id} key={restaurant.id}>
@@ -96,4 +105,15 @@ export default async function SourceDetailPage({
       </section>
     </div>
   );
+}
+
+function findLikelyDuplicate(candidate: CandidateRecord, restaurants: RestaurantRecord[]) {
+  return restaurants.find((restaurant) => {
+    if (normalise(restaurant.name) !== normalise(candidate.name)) return false;
+    return !candidate.city || !restaurant.city || normalise(restaurant.city) === normalise(candidate.city);
+  });
+}
+
+function normalise(value?: string | null) {
+  return (value ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
