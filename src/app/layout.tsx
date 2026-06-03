@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Inbox, List, Plus, Search } from "lucide-react";
 import { getCurrentUser } from "@/lib/auth";
+import { HeaderNav } from "@/components/HeaderNav";
 import { UserMenu } from "@/components/UserMenu";
 import "./globals.css";
 
@@ -27,25 +27,7 @@ export default async function RootLayout({
               <span>Tablestakes</span>
             </Link>
             <div className="flex flex-wrap items-center justify-end gap-1">
-              <Link className="button secondary !min-h-9 !px-3" href="/">
-                <Search size={16} />
-                <span className="hidden sm:inline">Library</span>
-              </Link>
-              <Link className="button secondary !min-h-9 !px-3" href="/sources">
-                <Inbox size={16} />
-                <span className="hidden sm:inline">Inbox</span>
-              </Link>
-              <Link className="button secondary !min-h-9 !px-3" href="/lists">
-                <List size={16} />
-                <span className="hidden sm:inline">Lists</span>
-              </Link>
-              <Link className="button secondary !min-h-9 !px-3" href="/profile">
-                <span className="hidden sm:inline">Profile</span>
-              </Link>
-              <Link className="button !min-h-9 !px-3" href="/restaurants/new">
-                <Plus size={16} />
-                <span className="hidden sm:inline">Add</span>
-              </Link>
+              <HeaderNav />
               <UserMenu user={user} />
             </div>
           </nav>

@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { CurrentUser } from "@/lib/auth";
 import { SignOutButton } from "@/components/SignOutButton";
+import { UserAvatar } from "@/components/UserAvatar";
 
 export function UserMenu({ user }: { user: CurrentUser | null }) {
   if (!user) {
@@ -14,11 +14,7 @@ export function UserMenu({ user }: { user: CurrentUser | null }) {
 
   return (
     <div className="flex items-center gap-2">
-      {user.image ? (
-        <Image src={user.image} alt="" width={28} height={28} className="rounded-full" />
-      ) : (
-        <span className="grid size-7 place-items-center rounded-full bg-[var(--soft)] text-xs font-semibold">{user.email.slice(0, 1).toUpperCase()}</span>
-      )}
+      <UserAvatar email={user.email} image={user.image} />
       <SignOutButton />
     </div>
   );

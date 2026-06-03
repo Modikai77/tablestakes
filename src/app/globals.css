@@ -87,6 +87,18 @@ textarea {
   color: var(--foreground);
 }
 
+.button.active,
+.button.secondary.active {
+  border-color: var(--foreground);
+  background: var(--foreground);
+  color: #fff;
+}
+
+.button:disabled {
+  cursor: progress;
+  opacity: 0.78;
+}
+
 .button.danger {
   background: var(--accent-2);
 }

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
-import { Check, RefreshCw, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 import { approveCandidateAction, processSourceAction, rejectCandidateAction } from "@/app/actions";
+import { ProcessSourceButton } from "@/components/ProcessSourceButton";
 import { getSource, listRestaurants } from "@/lib/store";
 import { priceLabel } from "@/lib/utils";
 
@@ -25,10 +26,7 @@ export default async function SourceDetailPage({
           <h1 className="mt-3 text-3xl font-semibold">{source.sourceLabel || "Source review"}</h1>
         </div>
         <form action={processAction}>
-          <button className="button" type="submit">
-            <RefreshCw size={16} />
-            Extract restaurants
-          </button>
+          <ProcessSourceButton />
         </form>
       </section>
 
@@ -98,4 +96,3 @@ export default async function SourceDetailPage({
     </div>
   );
 }
-
