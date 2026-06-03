@@ -22,6 +22,7 @@ export default async function RestaurantDetailPage({
   const enrichAction = enrichRestaurantAction.bind(null, restaurant.id);
   const deleteAction = deleteRestaurantAction.bind(null, restaurant.id);
   const addToListAction = addRestaurantToListAction.bind(null, restaurant.id);
+  const enriched = restaurant.enrichmentConfidence !== null && restaurant.enrichmentConfidence !== undefined;
 
   return (
     <div className="grid gap-6">
@@ -35,6 +36,12 @@ export default async function RestaurantDetailPage({
               <span className="chip">
                 <Star size={13} fill="currentColor" />
                 {restaurant.googleRating.toFixed(1)} ({restaurant.googleReviewCount ?? 0})
+              </span>
+            ) : null}
+            {enriched ? (
+              <span className="chip">
+                <Sparkles size={13} />
+                Enriched
               </span>
             ) : null}
           </div>
@@ -85,7 +92,7 @@ export default async function RestaurantDetailPage({
             <Row label="Phone" value={restaurant.phone} />
             <Row label="Website" value={restaurant.website ? <Link className="underline" href={restaurant.website}>Open <ExternalLink className="inline" size={12} /></Link> : null} />
             <Row label="Maps" value={restaurant.googleMapsUrl ? <Link className="underline" href={restaurant.googleMapsUrl}>Open <ExternalLink className="inline" size={12} /></Link> : null} />
-            <Row label="Enrichment" value={restaurant.enrichmentConfidence ? `${Math.round(restaurant.enrichmentConfidence * 100)}% confidence` : "Not enriched"} />
+            <Row label="Enrichment" value={enriched ? `Google Places run · ${Math.round(restaurant.enrichmentConfidence! * 100)}% confidence` : "Not enriched"} />
           </dl>
           <AddToListForm action={addToListAction} lists={lists} />
         </div>

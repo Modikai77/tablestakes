@@ -383,6 +383,7 @@ export async function approveCandidate(candidateId: string, mergeRestaurantId?: 
     const mergeTarget = mergeRestaurantId ? await db.restaurant.findFirst({ where: { id: mergeRestaurantId, userId: user.id } }) : null;
     const targetId = mergeTarget?.id || (await findDuplicateId(candidate.name, candidate.city ?? undefined));
     let restaurantId = targetId;
+    let createdRestaurant = false;
     if (!restaurantId) {
       const restaurant = await createRestaurant({
         name: candidate.name,
@@ -395,7 +396,9 @@ export async function approveCandidate(candidateId: string, mergeRestaurantId?: 
         tags: [...candidate.tags, ...candidate.occasionTags]
       });
       restaurantId = restaurant.id;
+      createdRestaurant = true;
     }
+    if (createdRestaurant) await enrichRestaurantAfterApproval(restaurantId);
     await db.restaurantSource.upsert({
       where: { restaurantId_sourceId: { restaurantId, sourceId: candidate.sourceId } },
       update: { evidence: candidate.evidenceSnippet },
@@ -413,6 +416,7 @@ export async function approveCandidate(candidateId: string, mergeRestaurantId?: 
   if (!candidate) throw new Error("Candidate not found");
   const duplicate = mergeRestaurantId ? state(user.id).restaurants.find((item) => item.id === mergeRestaurantId) : findMemoryDuplicate(user.id, candidate.name, candidate.city);
   let restaurant = duplicate;
+  let createdRestaurant = false;
   if (!restaurant) {
     restaurant = await createRestaurant({
       name: candidate.name,
@@ -424,7 +428,9 @@ export async function approveCandidate(candidateId: string, mergeRestaurantId?: 
       sourceSummary: candidate.recommendationReason ?? candidate.evidenceSnippet ?? undefined,
       tags: [...candidate.tags, ...candidate.occasionTags]
     });
+    createdRestaurant = true;
   }
+  if (createdRestaurant) await enrichRestaurantAfterApproval(restaurant.id);
   const source = state(user.id).sources.find((item) => item.id === candidate.sourceId);
   if (source && !restaurant.sources.some((item) => item.id === source.id)) restaurant.sources.push(source);
   candidate.restaurantId = restaurant.id;
@@ -432,6 +438,14 @@ export async function approveCandidate(candidateId: string, mergeRestaurantId?: 
   candidate.updatedAt = new Date();
   revalidateAll();
   return restaurant.id;
+}
+
+async function enrichRestaurantAfterApproval(restaurantId: string) {
+  try {
+    await enrichRestaurant(restaurantId);
+  } catch {
+    // Approval should not fail just because an external enrichment provider is unavailable.
+  }
 }
 
 export async function rejectCandidate(candidateId: string) {
