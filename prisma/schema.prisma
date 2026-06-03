@@ -1,0 +1,260 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum RestaurantStatus {
+  want_to_go
+  booked
+  visited
+  not_interested
+  closed
+}
+
+enum SourceType {
+  text
+  url
+  image
+  email
+  instagram
+  google_maps
+  manual
+}
+
+enum ProcessingStatus {
+  pending
+  processing
+  processed
+  failed
+}
+
+enum CandidateStatus {
+  pending
+  approved
+  rejected
+  merged
+}
+
+model Restaurant {
+  id                   String             @id @default(cuid())
+  userId               String             @map("user_id")
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                 String
+  canonicalName        String?            @map("canonical_name")
+  address              String?
+  city                 String?
+  neighbourhood        String?
+  country              String?
+  latitude             Float?
+  longitude            Float?
+  cuisine              String?
+  priceLevel           Int?               @map("price_level")
+  website              String?
+  phone                String?
+  googlePlaceId        String?            @map("google_place_id")
+  googleMapsUrl        String?            @map("google_maps_url")
+  openingHours         Json?              @map("opening_hours")
+  status               RestaurantStatus   @default(want_to_go)
+  notes                String?
+  sourceSummary        String?            @map("source_summary")
+  googleRating         Float?             @map("google_rating")
+  googleReviewCount    Int?               @map("google_review_count")
+  enrichmentMetadata   Json?              @map("enrichment_metadata")
+  enrichmentConfidence Float?             @map("enrichment_confidence")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+  restaurantSources    RestaurantSource[]
+  extractedCandidates  ExtractedCandidate[]
+  visits               Visit[]
+  tags                 RestaurantTag[]
+  embeddings           Embedding[]
+  listItems            RestaurantListItem[]
+
+  @@unique([userId, googlePlaceId])
+  @@index([userId])
+  @@index([city])
+  @@index([neighbourhood])
+  @@index([status])
+  @@map("restaurants")
+}
+
+model Source {
+  id               String               @id @default(cuid())
+  userId           String               @map("user_id")
+  user             User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type             SourceType
+  rawText          String?              @map("raw_text")
+  originalUrl      String?              @map("original_url")
+  uploadedImageUrl String?              @map("uploaded_image_url")
+  sourceLabel      String?              @map("source_label")
+  createdAt        DateTime             @default(now()) @map("created_at")
+  processedAt      DateTime?            @map("processed_at")
+  processingStatus ProcessingStatus     @default(pending) @map("processing_status")
+  extractionError  String?              @map("extraction_error")
+  candidates       ExtractedCandidate[]
+  restaurants      RestaurantSource[]
+
+  @@index([userId])
+  @@index([type])
+  @@index([processingStatus])
+  @@map("sources")
+}
+
+model User {
+  id            String           @id @default(cuid())
+  name          String?
+  email         String           @unique
+  image         String?
+  emailVerified DateTime?        @map("email_verified")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  updatedAt     DateTime         @updatedAt @map("updated_at")
+  restaurants   Restaurant[]
+  sources       Source[]
+  lists         RestaurantList[]
+
+  @@map("users")
+}
+
+model ExtractedCandidate {
+  id                String          @id @default(cuid())
+  sourceId          String          @map("source_id")
+  source            Source          @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+  restaurantId      String?         @map("restaurant_id")
+  restaurant        Restaurant?     @relation(fields: [restaurantId], references: [id], onDelete: SetNull)
+  name              String
+  city              String?
+  neighbourhood     String?
+  address           String?
+  cuisine           String?
+  priceLevel        Int?            @map("price_level")
+  tags              String[]
+  occasionTags      String[]        @map("occasion_tags")
+  evidenceSnippet   String?         @map("evidence_snippet")
+  confidence        Float           @default(0.5)
+  recommendationReason String?      @map("recommendation_reason")
+  status            CandidateStatus @default(pending)
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  @@index([sourceId])
+  @@map("extracted_candidates")
+}
+
+model RestaurantSource {
+  restaurantId String     @map("restaurant_id")
+  sourceId     String     @map("source_id")
+  evidence     String?
+  createdAt    DateTime   @default(now()) @map("created_at")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  source       Source     @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([restaurantId, sourceId])
+  @@map("restaurant_sources")
+}
+
+model Visit {
+  id           String       @id @default(cuid())
+  restaurantId String       @map("restaurant_id")
+  restaurant   Restaurant   @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  visitDate    DateTime     @map("visit_date")
+  rating       Int?
+  companions   String?
+  notes        String?
+  dishes       String?
+  wineNotes    String?      @map("wine_notes")
+  wouldReturn  Boolean?     @map("would_return")
+  occasion     String?
+  createdAt    DateTime     @default(now()) @map("created_at")
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+  photos       VisitPhoto[]
+
+  @@index([restaurantId])
+  @@index([visitDate])
+  @@map("visits")
+}
+
+model VisitPhoto {
+  id           String   @id @default(cuid())
+  visitId      String   @map("visit_id")
+  visit        Visit    @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  url          String
+  thumbnailUrl String?  @map("thumbnail_url")
+  caption      String?
+  dishName     String?  @map("dish_name")
+  tags         String[]
+  displayOrder Int      @default(0) @map("display_order")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([visitId])
+  @@map("visit_photos")
+}
+
+model Tag {
+  id          String          @id @default(cuid())
+  name        String          @unique
+  restaurants RestaurantTag[]
+  createdAt   DateTime        @default(now()) @map("created_at")
+
+  @@map("tags")
+}
+
+model RestaurantTag {
+  restaurantId String     @map("restaurant_id")
+  tagId        String     @map("tag_id")
+  restaurant   Restaurant @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  tag          Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([restaurantId, tagId])
+  @@map("restaurant_tags")
+}
+
+model Embedding {
+  id           String                  @id @default(cuid())
+  restaurantId String?                 @map("restaurant_id")
+  restaurant   Restaurant?             @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  ownerType    String                  @map("owner_type")
+  ownerId      String                  @map("owner_id")
+  text         String
+  provider     String                  @default("openai")
+  model        String
+  dimensions   Int
+  embedding    Unsupported("vector")?
+  createdAt    DateTime                @default(now()) @map("created_at")
+  updatedAt    DateTime                @updatedAt @map("updated_at")
+
+  @@index([ownerType, ownerId])
+  @@map("embeddings")
+}
+
+model RestaurantList {
+  id          String               @id @default(cuid())
+  userId      String               @map("user_id")
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  createdAt   DateTime             @default(now()) @map("created_at")
+  updatedAt   DateTime             @updatedAt @map("updated_at")
+  items       RestaurantListItem[]
+
+  @@index([userId])
+  @@unique([userId, name])
+  @@map("restaurant_lists")
+}
+
+model RestaurantListItem {
+  listId       String         @map("list_id")
+  restaurantId String         @map("restaurant_id")
+  list         RestaurantList @relation(fields: [listId], references: [id], onDelete: Cascade)
+  restaurant   Restaurant     @relation(fields: [restaurantId], references: [id], onDelete: Cascade)
+  notes        String?
+  createdAt    DateTime       @default(now()) @map("created_at")
+
+  @@id([listId, restaurantId])
+  @@index([restaurantId])
+  @@map("restaurant_list_items")
+}
