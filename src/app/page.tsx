@@ -29,6 +29,7 @@ export default async function Home({
         <div>
           <p className="label">Private restaurant memory</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight md:text-4xl">Places worth remembering</h1>
+          <p className="mt-2 text-sm font-semibold text-[var(--muted)]">{restaurants.length} {restaurants.length === 1 ? "restaurant" : "restaurants"} in library</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link className="button secondary" href="/sources">
@@ -92,4 +93,3 @@ function FilterInput({ label, name, value }: { label: string; name: string; valu
 function asSingle(value?: string | string[]) {
   return Array.isArray(value) ? value[0] : value;
 }
-
