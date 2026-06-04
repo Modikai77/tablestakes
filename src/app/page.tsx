@@ -18,7 +18,9 @@ export default async function Home({
     status: asSingle(params.status) as RestaurantFilters["status"],
     tag: asSingle(params.tag),
     visited: asSingle(params.visited) as RestaurantFilters["visited"],
-    priceLevel: asSingle(params.priceLevel)
+    priceLevel: asSingle(params.priceLevel),
+    score: asSingle(params.score) as RestaurantFilters["score"],
+    lastVisitScore: asSingle(params.lastVisitScore) as RestaurantFilters["lastVisitScore"]
   };
   const [restaurants, sources] = await Promise.all([listRestaurants(filters), listSources()]);
   const pendingCandidates = sources.reduce((count, source) => count + source.candidates.filter((candidate) => candidate.status === "pending").length, 0);
@@ -29,9 +31,11 @@ export default async function Home({
         <div>
           <p className="label">Private restaurant memory</p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight md:text-4xl">Places worth remembering</h1>
-          <p className="mt-2 text-sm font-semibold text-[var(--muted)]">{restaurants.length} {restaurants.length === 1 ? "restaurant" : "restaurants"} in library</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <div className="button secondary cursor-default" aria-label={`${restaurants.length} ${restaurants.length === 1 ? "restaurant" : "restaurants"} in library`}>
+            {restaurants.length} {restaurants.length === 1 ? "restaurant" : "restaurants"}
+          </div>
           <Link className="button secondary" href="/sources">
             <Inbox size={16} />
             {pendingCandidates} to review
@@ -43,7 +47,7 @@ export default async function Home({
         </div>
       </section>
 
-      <form className="panel grid gap-3 p-4 md:grid-cols-[2fr_1fr_1fr_1fr_auto]">
+      <form className="panel grid gap-3 p-4 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto]">
         <label className="field">
           <span className="label">Search</span>
           <span className="relative">
@@ -62,6 +66,24 @@ export default async function Home({
             <option value="visited">Visited</option>
             <option value="not_interested">Not interested</option>
             <option value="closed">Closed</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="label">Score</span>
+          <select className="input" name="score" defaultValue={filters.score ?? "all"}>
+            <option value="all">Any</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+            <option value="5">5</option>
+          </select>
+        </label>
+        <label className="field">
+          <span className="label">Last visit</span>
+          <select className="input" name="lastVisitScore" defaultValue={filters.lastVisitScore ?? "all"}>
+            <option value="all">Any</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+            <option value="5">5</option>
           </select>
         </label>
         <button className="button self-end" type="submit">
