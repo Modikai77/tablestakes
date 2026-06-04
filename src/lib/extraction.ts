@@ -148,6 +148,7 @@ function providerGuidance(source: SourceRecord) {
     return [
       "Google Maps extraction guidance:",
       "- Treat this URL as primary evidence, even if there is no pasted text.",
+      "- For saved lists, this app follows the Google Maps list-data preload endpoint when it is visible in the fetched page.",
       "- If the URL is a saved list, extract every restaurant/place visible in fetched metadata, page text, embedded data, or user-provided screenshots.",
       "- If the URL is a single place, extract that place as one restaurant candidate.",
       "- Google Maps pages can be sparse when fetched server-side; use URL/title/metadata/image evidence and keep confidence honest."
@@ -208,12 +209,139 @@ async function fetchReadableUrlText(url: string) {
       return `URL content type was not readable text (${contentType || "unknown"}).`;
     }
     const text = await readResponseText(response);
-    return [`Final fetched URL: ${response.url}`, htmlToReadableText(text)].join("\n\n").slice(0, maxFetchedSourceCharacters);
+    const parts = [`Final fetched URL: ${response.url}`, htmlToReadableText(text)];
+    if (isGoogleMapsUrl(url) || isGoogleMapsUrl(response.url)) {
+      const mapsListText = await fetchGoogleMapsSavedListText(text, response.url, controller.signal);
+      if (mapsListText) parts.push(mapsListText);
+    }
+    return parts.join("\n\n").slice(0, maxFetchedSourceCharacters);
   } catch (error) {
     return `URL fetch failed: ${error instanceof Error ? error.message : "unknown error"}.`;
   } finally {
     clearTimeout(timeout);
   }
+}
+
+async function fetchGoogleMapsSavedListText(pageHtml: string, finalUrl: string, signal: AbortSignal) {
+  const endpoint = extractGoogleMapsEntityListUrl(pageHtml, finalUrl);
+  if (!endpoint || !canFetchUrl(endpoint)) return "";
+
+  try {
+    const response = await fetch(endpoint, {
+      headers: {
+        "User-Agent": "Tablestakes recommendation extractor/1.0"
+      },
+      signal
+    });
+    if (!response.ok) return `Google Maps saved-list endpoint failed with HTTP ${response.status}.`;
+
+    const text = await readResponseText(response);
+    const readable = googleMapsEntityListToReadableText(text);
+    if (!readable) return "Google Maps saved-list endpoint returned no readable places.";
+
+    return `Google Maps saved-list data:\n${readable}`;
+  } catch (error) {
+    return `Google Maps saved-list endpoint failed: ${error instanceof Error ? error.message : "unknown error"}.`;
+  }
+}
+
+function extractGoogleMapsEntityListUrl(pageHtml: string, finalUrl: string) {
+  const candidates = Array.from(pageHtml.matchAll(/["']([^"']*\/maps\/preview\/entitylist\/getlist(?!participants)\?[^"']+)["']/gi)).map((match) =>
+    decodeGoogleMapsEndpoint(match[1])
+  );
+  const candidate = candidates.find((value) => value.includes("pb=")) ?? candidates[0];
+  if (!candidate) return null;
+
+  try {
+    return new URL(candidate, new URL(finalUrl).origin).toString();
+  } catch {
+    return null;
+  }
+}
+
+function decodeGoogleMapsEndpoint(value: string) {
+  return decodeHtml(value)
+    .replace(/\\u003d/gi, "=")
+    .replace(/\\u0026/gi, "&")
+    .replace(/\\\//g, "/");
+}
+
+function googleMapsEntityListToReadableText(value: string) {
+  const jsonText = value.replace(/^\)\]\}'\s*/, "").trim();
+  try {
+    const parsed = JSON.parse(jsonText) as unknown;
+    const places = extractGoogleMapsPlaces(parsed);
+    if (places.length) {
+      return places
+        .map((place) => {
+          const details = [place.address, place.note ? `note: ${place.note}` : ""].filter(Boolean).join("; ");
+          return details ? `- ${place.name} — ${details}` : `- ${place.name}`;
+        })
+        .join("\n");
+    }
+  } catch {
+    // Fall through to a quoted-string fallback for non-standard Maps payloads.
+  }
+
+  return extractReadableGoogleMapsStrings(value)
+    .slice(0, 120)
+    .map((item) => `- ${item}`)
+    .join("\n");
+}
+
+type GoogleMapsPlace = {
+  name: string;
+  address?: string;
+  note?: string;
+};
+
+function extractGoogleMapsPlaces(value: unknown) {
+  const places: GoogleMapsPlace[] = [];
+  const seen = new Set<string>();
+
+  function visit(node: unknown) {
+    if (!Array.isArray(node)) return;
+
+    const detail = Array.isArray(node[1]) ? node[1] : null;
+    const name = cleanGoogleMapsString(typeof node[2] === "string" ? node[2] : "");
+    const address = cleanGoogleMapsString(typeof detail?.[4] === "string" ? detail[4] : "");
+    const note = cleanGoogleMapsString(typeof node[3] === "string" ? node[3] : "");
+
+    if (name && address && isLikelyGoogleMapsPlaceName(name)) {
+      const key = `${name.toLowerCase()}|${address.toLowerCase()}`;
+      if (!seen.has(key)) {
+        seen.add(key);
+        places.push({ name, address, note });
+      }
+    }
+
+    for (const child of node) visit(child);
+  }
+
+  visit(value);
+  return places.slice(0, 500);
+}
+
+function extractReadableGoogleMapsStrings(value: string) {
+  const strings = Array.from(value.matchAll(/"((?:[^"\\]|\\.){3,180})"/g)).map((match) => cleanGoogleMapsString(match[1]));
+  return Array.from(new Set(strings.filter((item) => isLikelyGoogleMapsPlaceName(item))));
+}
+
+function cleanGoogleMapsString(value: string) {
+  return decodeHtml(value)
+    .replace(/\\u([\da-f]{4})/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/\\(["\\/])/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function isLikelyGoogleMapsPlaceName(value: string) {
+  if (value.length < 2 || value.length > 140) return false;
+  if (!/[A-Za-zÀ-ÖØ-öø-ÿ]/.test(value)) return false;
+  if (/^https?:|google|gstatic|maps|usercontent|schema|roadmap|satellite/i.test(value)) return false;
+  if (/^[\d\s,.'-]+$/.test(value)) return false;
+  if (/^[A-Za-z0-9_-]{24,}$/.test(value)) return false;
+  return true;
 }
 
 async function readResponseText(response: Response) {
@@ -380,3 +508,8 @@ function heuristicExtract(text: string) {
     recommendationReason: "Detected by local fallback extraction because OPENAI_API_KEY is not configured."
   }));
 }
+
+export const extractionTestInternals = {
+  extractGoogleMapsEntityListUrl,
+  googleMapsEntityListToReadableText
+};
