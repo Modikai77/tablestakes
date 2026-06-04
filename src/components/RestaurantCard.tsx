@@ -23,7 +23,7 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantRecord })
         <span className="chip">{priceLabel(restaurant.priceLevel)}</span>
         {restaurant.googleRating ? (
           <span className="chip">
-            <Star size={13} fill="currentColor" /> {restaurant.googleRating.toFixed(1)}
+            <Star size={13} fill="currentColor" /> Google {restaurant.googleRating.toFixed(1)}
           </span>
         ) : null}
         {lastVisit?.rating ? (

@@ -755,8 +755,7 @@ function filterRestaurants(restaurants: RestaurantRecord[], filters: RestaurantF
     if (filters.status && filters.status !== "all" && restaurant.status !== filters.status) return false;
     if (filters.tag && !restaurant.tags.some((tag) => tag.toLowerCase() === filters.tag?.toLowerCase())) return false;
     if (filters.priceLevel && String(restaurant.priceLevel ?? "") !== filters.priceLevel) return false;
-    if (filters.score && filters.score !== "all" && (restaurant.googleRating ?? 0) < Number(filters.score)) return false;
-    if (filters.lastVisitScore && filters.lastVisitScore !== "all" && (restaurant.visits[0]?.rating ?? 0) < Number(filters.lastVisitScore)) return false;
+    if (filters.score && filters.score !== "all" && (restaurant.visits[0]?.rating ?? 0) < Number(filters.score)) return false;
     if (filters.visited === "visited" && restaurant.visits.length === 0) return false;
     if (filters.visited === "unvisited" && restaurant.visits.length > 0) return false;
     return true;

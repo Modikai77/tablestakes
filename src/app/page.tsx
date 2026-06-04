@@ -19,8 +19,7 @@ export default async function Home({
     tag: asSingle(params.tag),
     visited: asSingle(params.visited) as RestaurantFilters["visited"],
     priceLevel: asSingle(params.priceLevel),
-    score: asSingle(params.score) as RestaurantFilters["score"],
-    lastVisitScore: asSingle(params.lastVisitScore) as RestaurantFilters["lastVisitScore"]
+    score: asSingle(params.score) as RestaurantFilters["score"]
   };
   const [restaurants, sources] = await Promise.all([listRestaurants(filters), listSources()]);
   const pendingCandidates = sources.reduce((count, source) => count + source.candidates.filter((candidate) => candidate.status === "pending").length, 0);
@@ -47,7 +46,7 @@ export default async function Home({
         </div>
       </section>
 
-      <form className="panel grid gap-3 p-4 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_1fr_auto]">
+      <form className="panel grid gap-3 p-4 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
         <label className="field">
           <span className="label">Search</span>
           <span className="relative">
@@ -69,17 +68,8 @@ export default async function Home({
           </select>
         </label>
         <label className="field">
-          <span className="label">Score</span>
+          <span className="label">Visit score</span>
           <select className="input" name="score" defaultValue={filters.score ?? "all"}>
-            <option value="all">Any</option>
-            <option value="3">3+</option>
-            <option value="4">4+</option>
-            <option value="5">5</option>
-          </select>
-        </label>
-        <label className="field">
-          <span className="label">Last visit</span>
-          <select className="input" name="lastVisitScore" defaultValue={filters.lastVisitScore ?? "all"}>
             <option value="all">Any</option>
             <option value="3">3+</option>
             <option value="4">4+</option>

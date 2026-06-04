@@ -108,7 +108,6 @@ export type RestaurantFilters = {
   visited?: "visited" | "unvisited" | "all";
   priceLevel?: string;
   score?: "3" | "4" | "5" | "all";
-  lastVisitScore?: "1" | "2" | "3" | "4" | "5" | "all";
 };
 
 export type RestaurantListRecord = {
