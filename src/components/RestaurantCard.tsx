@@ -4,6 +4,8 @@ import type { RestaurantRecord } from "@/lib/types";
 import { priceLabel } from "@/lib/utils";
 
 export function RestaurantCard({ restaurant }: { restaurant: RestaurantRecord }) {
+  const lastVisit = restaurant.visits[0];
+
   return (
     <Link href={`/restaurants/${restaurant.id}`} className="panel block p-4 transition hover:-translate-y-0.5 hover:shadow-sm">
       <div className="flex items-start justify-between gap-3">
@@ -24,6 +26,11 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantRecord })
             <Star size={13} fill="currentColor" /> {restaurant.googleRating.toFixed(1)}
           </span>
         ) : null}
+        {lastVisit?.rating ? (
+          <span className="chip">
+            Last visit {lastVisit.rating}/5
+          </span>
+        ) : null}
       </div>
       {restaurant.notes || restaurant.sourceSummary ? (
         <p className="mt-3 line-clamp-2 text-sm leading-6 text-[var(--muted)]">{restaurant.notes ?? restaurant.sourceSummary}</p>
@@ -38,4 +45,3 @@ export function RestaurantCard({ restaurant }: { restaurant: RestaurantRecord })
     </Link>
   );
 }
-
