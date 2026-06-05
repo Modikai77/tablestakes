@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Inbox, Plus, Search } from "lucide-react";
+import { Inbox, Plus } from "lucide-react";
 import { RestaurantCard } from "@/components/RestaurantCard";
 import { listRestaurants, listSources } from "@/lib/store";
 import type { RestaurantFilters } from "@/lib/types";
@@ -49,10 +49,7 @@ export default async function Home({
       <form className="panel grid gap-3 p-4 md:grid-cols-[2fr_1fr_1fr_1fr_1fr_auto]">
         <label className="field">
           <span className="label">Search</span>
-          <span className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted)]" size={16} />
-            <input className="input pl-9" name="q" defaultValue={filters.q} placeholder="fancy Indian, Soho lunch, child-friendly Broadstairs..." />
-          </span>
+          <input className="input" name="q" defaultValue={filters.q} placeholder="fancy Indian, Soho lunch, child-friendly Broadstairs..." />
         </label>
         <FilterInput label="City" name="city" value={filters.city} />
         <FilterInput label="Neighbourhood" name="neighbourhood" value={filters.neighbourhood} />

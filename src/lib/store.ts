@@ -246,6 +246,29 @@ export async function updateRestaurant(idValue: string, input: Partial<Restauran
   return existing;
 }
 
+export async function updateRestaurantStatus(idValue: string, status: RestaurantStatus) {
+  const user = await requireUser();
+  const db = getPrisma();
+  if (db) {
+    const existing = await db.restaurant.findFirst({ where: { id: idValue, userId: user.id } });
+    if (!existing) return null;
+    const restaurant = await db.restaurant.update({
+      where: { id: idValue },
+      data: { status },
+      include: restaurantInclude
+    } as never);
+    revalidateAll();
+    return mapRestaurant(restaurant);
+  }
+
+  const existing = state(user.id).restaurants.find((restaurant) => restaurant.id === idValue);
+  if (!existing) return null;
+  existing.status = status;
+  existing.updatedAt = new Date();
+  revalidateAll();
+  return existing;
+}
+
 export async function deleteRestaurant(idValue: string) {
   const user = await requireUser();
   const db = getPrisma();

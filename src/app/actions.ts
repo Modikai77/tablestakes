@@ -13,7 +13,8 @@ import {
   processSource,
   removeRestaurantFromList,
   rejectCandidate,
-  updateRestaurant
+  updateRestaurant,
+  updateRestaurantStatus
 } from "@/lib/store";
 import { asNumber, asString, splitList } from "@/lib/utils";
 import type { RestaurantStatus, SourceType } from "@/lib/types";
@@ -26,6 +27,10 @@ export async function createRestaurantAction(formData: FormData) {
 export async function updateRestaurantAction(id: string, formData: FormData) {
   await updateRestaurant(id, readRestaurantForm(formData));
   redirect(`/restaurants/${id}`);
+}
+
+export async function updateRestaurantStatusAction(id: string, formData: FormData) {
+  await updateRestaurantStatus(id, asRestaurantStatus(asString(formData.get("status"))));
 }
 
 export async function deleteRestaurantAction(id: string) {
@@ -134,4 +139,12 @@ function readRestaurantForm(formData: FormData) {
     sourceSummary: asString(formData.get("sourceSummary")),
     tags: splitList(formData.get("tags"))
   };
+}
+
+function asRestaurantStatus(value?: string): RestaurantStatus {
+  if (value === "booked" || value === "visited" || value === "not_interested" || value === "closed") {
+    return value;
+  }
+  if (value === "want_to_go") return value;
+  throw new Error("Invalid restaurant status");
 }
