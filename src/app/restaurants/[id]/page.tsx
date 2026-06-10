@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, CircleAlert, CircleCheck, ExternalLink, MapPin, Pencil, Sparkles, Star } from "lucide-react";
+import { CalendarDays, CircleAlert, CircleCheck, ExternalLink, Inbox, MapPin, Pencil, Sparkles, Star } from "lucide-react";
 import { AddToListForm } from "@/components/AddToListForm";
 import { DeleteRestaurantForm } from "@/components/DeleteRestaurantForm";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { VisitForm } from "@/components/VisitForm";
 import { addRestaurantToListAction, deleteRestaurantAction, enrichRestaurantAction } from "@/app/actions";
 import { getRestaurant, listRestaurantLists } from "@/lib/store";
+import type { RestaurantSourceRecord } from "@/lib/types";
 import { formatDate, priceLabel } from "@/lib/utils";
 
 export default async function RestaurantDetailPage({
@@ -100,6 +101,22 @@ export default async function RestaurantDetailPage({
         </div>
       </section>
 
+      <section className="grid gap-3">
+        <div className="flex items-center gap-2">
+          <Inbox size={18} />
+          <h2 className="text-xl font-semibold">Source</h2>
+        </div>
+        {restaurant.sourceLinks.length ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {restaurant.sourceLinks.map((sourceLink) => (
+              <SourceCard sourceLink={sourceLink} key={sourceLink.sourceId} />
+            ))}
+          </div>
+        ) : (
+          <div className="panel p-4 text-sm text-[var(--muted)]">No inbox source linked to this restaurant.</div>
+        )}
+      </section>
+
       <section className="grid gap-4 md:grid-cols-[1fr_1fr]">
         <div className="grid gap-3">
           <div className="flex items-center gap-2">
@@ -131,6 +148,37 @@ export default async function RestaurantDetailPage({
         </details>
       </section>
     </div>
+  );
+}
+
+function SourceCard({ sourceLink }: { sourceLink: RestaurantSourceRecord }) {
+  const { source } = sourceLink;
+  const sourceTitle = source.sourceLabel || "Untitled source";
+
+  return (
+    <article className="panel p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="label">{source.type.replaceAll("_", " ")}</p>
+          <h3 className="mt-1 font-semibold">
+            <Link className="underline decoration-[var(--line)] underline-offset-4 hover:decoration-current" href={`/sources/${source.id}`}>
+              {sourceTitle}
+            </Link>
+          </h3>
+        </div>
+        {source.processingStatus ? <span className="chip">{source.processingStatus}</span> : null}
+      </div>
+      <dl className="mt-3 grid gap-2 text-sm">
+        <Row label="Inbox" value={formatDate(source.createdAt)} />
+        <Row label="Extracted" value={sourceLink.extractedAt ? formatDate(sourceLink.extractedAt) : "Not recorded"} />
+        <Row label="Saved" value={formatDate(sourceLink.createdAt)} />
+      </dl>
+      {sourceLink.evidence || sourceLink.candidate?.recommendationReason ? (
+        <p className="mt-3 border-l-2 border-[var(--accent)] pl-3 text-sm leading-6 text-[var(--muted)]">
+          {sourceLink.evidence || sourceLink.candidate?.recommendationReason}
+        </p>
+      ) : null}
+    </article>
   );
 }
 

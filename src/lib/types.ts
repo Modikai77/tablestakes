@@ -59,6 +59,7 @@ export type RestaurantRecord = {
   tags: string[];
   visits: VisitRecord[];
   sources: SourceRecord[];
+  sourceLinks: RestaurantSourceRecord[];
   createdAt: Date;
   updatedAt: Date;
 };
@@ -76,6 +77,16 @@ export type SourceRecord = {
   processingStatus: ProcessingStatus;
   extractionError?: string | null;
   candidates: CandidateRecord[];
+};
+
+export type RestaurantSourceRecord = {
+  restaurantId: string;
+  sourceId: string;
+  source: SourceRecord;
+  evidence?: string | null;
+  createdAt: Date;
+  extractedAt?: Date | null;
+  candidate?: CandidateRecord | null;
 };
 
 export type CandidateRecord = {

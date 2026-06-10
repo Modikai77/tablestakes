@@ -73,6 +73,17 @@ export const demoRestaurants: RestaurantRecord[] = [
     enrichmentConfidence: 0.8,
     tags: ["wine", "date night", "lunch"],
     sources: [demoSources[0]],
+    sourceLinks: [
+      {
+        restaurantId: "rst-noble-rot",
+        sourceId: demoSources[0].id,
+        source: demoSources[0],
+        evidence: "Noble Rot in Bloomsbury is still brilliant for wine and a long lunch.",
+        createdAt: now,
+        extractedAt: now,
+        candidate: null
+      }
+    ],
     visits: [
       {
         id: "visit-noble-rot-1",
@@ -119,6 +130,17 @@ export const demoRestaurants: RestaurantRecord[] = [
     enrichmentConfidence: null,
     tags: ["seafood", "family", "coastal"],
     sources: [demoSources[1]],
+    sourceLinks: [
+      {
+        restaurantId: "rst-wyatt-jones",
+        sourceId: demoSources[1].id,
+        source: demoSources[1],
+        evidence: "great for seafood and a family lunch",
+        createdAt: now,
+        extractedAt: now,
+        candidate: null
+      }
+    ],
     visits: [],
     createdAt: now,
     updatedAt: now

@@ -195,6 +195,7 @@ export async function createRestaurant(input: {
     tags,
     visits: [],
     sources: [],
+    sourceLinks: [],
     createdAt: now,
     updatedAt: now
   };
@@ -456,6 +457,17 @@ export async function approveCandidate(candidateId: string, mergeRestaurantId?: 
   if (createdRestaurant) await enrichRestaurantAfterApproval(restaurant.id);
   const source = state(user.id).sources.find((item) => item.id === candidate.sourceId);
   if (source && !restaurant.sources.some((item) => item.id === source.id)) restaurant.sources.push(source);
+  if (source && !restaurant.sourceLinks.some((item) => item.sourceId === source.id)) {
+    restaurant.sourceLinks.push({
+      restaurantId: restaurant.id,
+      sourceId: source.id,
+      source,
+      evidence: candidate.evidenceSnippet,
+      createdAt: new Date(),
+      extractedAt: candidate.createdAt,
+      candidate
+    });
+  }
   candidate.restaurantId = restaurant.id;
   candidate.status = mergeRestaurantId ? "merged" : "approved";
   candidate.updatedAt = new Date();
@@ -813,6 +825,32 @@ function blobUploadsConfigured() {
 }
 
 function mapRestaurant(raw: any): RestaurantRecord {
+  const sourceLinks =
+    raw.restaurantSources?.map((item: any) => {
+      const source = mapSource(item.source);
+      const candidate = source.candidates.find((candidate) => candidate.restaurantId === raw.id) ?? null;
+      return {
+        restaurantId: item.restaurantId,
+        sourceId: item.sourceId,
+        source,
+        evidence: item.evidence,
+        createdAt: item.createdAt,
+        extractedAt: candidate?.createdAt ?? source.processedAt ?? null,
+        candidate
+      };
+    }) ??
+    raw.sourceLinks ??
+    raw.sources?.map((source: SourceRecord) => ({
+      restaurantId: raw.id,
+      sourceId: source.id,
+      source,
+      evidence: null,
+      createdAt: source.processedAt ?? source.createdAt,
+      extractedAt: source.processedAt ?? null,
+      candidate: source.candidates.find((candidate) => candidate.restaurantId === raw.id) ?? null
+    })) ??
+    [];
+
   return {
     id: raw.id,
     userId: raw.userId,
@@ -855,7 +893,8 @@ function mapRestaurant(raw: any): RestaurantRecord {
         updatedAt: visit.updatedAt,
         photos: visit.photos ?? []
       })) ?? [],
-    sources: raw.restaurantSources?.map((item: any) => mapSource(item.source)) ?? raw.sources ?? [],
+    sources: sourceLinks.map((item: any) => item.source),
+    sourceLinks,
     createdAt: raw.createdAt,
     updatedAt: raw.updatedAt
   };
