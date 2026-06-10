@@ -32,6 +32,15 @@ a {
   text-decoration: none;
 }
 
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid rgba(23, 108, 99, 0.22);
+  outline-offset: 2px;
+}
+
 button,
 input,
 select,
@@ -87,6 +96,12 @@ textarea {
   color: var(--foreground);
 }
 
+.button.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--muted);
+}
+
 .button.active,
 .button.secondary.active {
   border-color: var(--foreground);
@@ -103,9 +118,16 @@ textarea {
   background: var(--accent-2);
 }
 
+.button.danger.secondary {
+  border-color: rgba(159, 64, 45, 0.32);
+  background: #fff;
+  color: var(--accent-2);
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
+  gap: 0.25rem;
   border: 1px solid var(--line);
   border-radius: 999px;
   background: var(--soft);
@@ -115,8 +137,51 @@ textarea {
   font-weight: 650;
 }
 
+.chip.status-want_to_go {
+  border-color: rgba(23, 108, 99, 0.22);
+  background: #e8f3ef;
+  color: #0f5b52;
+}
+
+.chip.status-booked {
+  border-color: rgba(41, 94, 164, 0.24);
+  background: #eaf1fb;
+  color: #254f8f;
+}
+
+.chip.status-visited {
+  border-color: rgba(98, 102, 41, 0.24);
+  background: #eff2dd;
+  color: #55591f;
+}
+
+.chip.status-not_interested,
+.chip.status-closed {
+  border-color: rgba(159, 64, 45, 0.24);
+  background: #f6e9e5;
+  color: #8c3325;
+}
+
+.chip.warning {
+  border-color: rgba(159, 64, 45, 0.24);
+  background: #f6e9e5;
+  color: #8c3325;
+}
+
+.chip.success {
+  border-color: rgba(23, 108, 99, 0.22);
+  background: #e8f3ef;
+  color: #0f5b52;
+}
+
 .panel {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
+}
+
+.subtle-panel {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--soft);
 }

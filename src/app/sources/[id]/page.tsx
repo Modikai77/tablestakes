@@ -48,6 +48,14 @@ export default async function SourceDetailPage({
           const rejectAction = rejectCandidateAction.bind(null, source.id, candidate.id);
           return (
             <article className="panel grid gap-4 p-4" key={candidate.id}>
+              {duplicate ? (
+                <div className="subtle-panel flex items-start gap-2 p-3 text-sm text-[var(--accent-2)]">
+                  <CircleAlert className="mt-0.5 shrink-0" size={16} />
+                  <span>
+                    Possible match: <strong>{duplicate.name}</strong>{duplicate.city ? `, ${duplicate.city}` : ""}. Review the merge target before approving.
+                  </span>
+                </div>
+              ) : null}
               <div className="flex flex-col justify-between gap-3 md:flex-row md:items-start">
                 <div>
                   <div className="flex flex-wrap gap-2">
@@ -56,33 +64,35 @@ export default async function SourceDetailPage({
                     {candidate.cuisine ? <span className="chip">{candidate.cuisine}</span> : null}
                     <span className="chip">{priceLabel(candidate.priceLevel)}</span>
                     {duplicate ? (
-                      <span className="chip text-[var(--accent-2)]">
+                      <span className="chip warning">
                         <CircleAlert size={13} />
-                        Likely already in library
+                        Duplicate risk
                       </span>
                     ) : null}
                   </div>
                   <h3 className="mt-3 text-xl font-semibold">{candidate.name}</h3>
                   <p className="mt-1 text-sm text-[var(--muted)]">{[candidate.neighbourhood, candidate.city, candidate.address].filter(Boolean).join(", ")}</p>
-                  {duplicate ? <p className="mt-2 text-sm text-[var(--accent-2)]">Possible match: {duplicate.name}{duplicate.city ? `, ${duplicate.city}` : ""}. Approving will merge into this restaurant unless you choose another option.</p> : null}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <form action={approveAction} className="flex gap-2">
-                    <select className="input min-w-44" name="mergeRestaurantId" defaultValue={duplicate?.id ?? ""}>
-                      <option value="">Save as new or auto-merge</option>
-                      {restaurants.map((restaurant) => (
-                        <option value={restaurant.id} key={restaurant.id}>
-                          Merge: {restaurant.name}
-                        </option>
-                      ))}
-                    </select>
-                    <button className="button" type="submit">
+                <div className="w-full md:w-auto">
+                  <form action={approveAction} className="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_auto] md:max-w-md">
+                    <label className="field">
+                      <span className="label">Save destination</span>
+                      <select className="input min-w-44" name="mergeRestaurantId" defaultValue={duplicate?.id ?? ""}>
+                        <option value="">Save as new restaurant</option>
+                        {restaurants.map((restaurant) => (
+                          <option value={restaurant.id} key={restaurant.id}>
+                            Merge: {restaurant.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <button className="button self-end" type="submit">
                       <Check size={16} />
                       Approve
                     </button>
                   </form>
-                  <form action={rejectAction}>
-                    <button className="button secondary" type="submit">
+                  <form action={rejectAction} className="mt-2">
+                    <button className="button ghost w-full md:w-auto" type="submit">
                       <X size={16} />
                       Reject
                     </button>

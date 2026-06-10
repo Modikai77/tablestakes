@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { CircleAlert } from "lucide-react";
 import { getCurrentUser, googleAuthConfigured } from "@/lib/auth";
 import { SignInButton } from "@/components/SignInButton";
 
@@ -17,8 +18,20 @@ export default async function SignInPage() {
         {googleAuthConfigured ? (
           <SignInButton />
         ) : (
-          <div className="rounded-md border border-[var(--line)] bg-[var(--soft)] p-4 text-sm leading-6 text-[var(--muted)]">
-            Google login is not configured yet. Add `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` and `NEXTAUTH_SECRET` to your environment, then restart the app.
+          <div className="subtle-panel grid gap-3 p-4 text-sm leading-6 text-[var(--muted)]">
+            <div className="flex items-start gap-2">
+              <CircleAlert className="mt-0.5 shrink-0 text-[var(--accent-2)]" size={16} />
+              <div>
+                <p className="font-semibold text-[var(--foreground)]">Sign-in is not available in this environment yet.</p>
+                <p className="mt-1">Ask the workspace owner to finish Google sign-in setup, then come back to continue.</p>
+              </div>
+            </div>
+            <details>
+              <summary className="cursor-pointer font-semibold text-[var(--foreground)]">Developer setup</summary>
+              <p className="mt-2">
+                Add <code>GOOGLE_CLIENT_ID</code>, <code>GOOGLE_CLIENT_SECRET</code> and <code>NEXTAUTH_SECRET</code>, then restart the app.
+              </p>
+            </details>
           </div>
         )}
       </div>

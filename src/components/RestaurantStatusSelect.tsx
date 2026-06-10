@@ -21,7 +21,7 @@ export function RestaurantStatusSelect({ restaurantId, status }: { restaurantId:
     <div className="relative">
       <select
         aria-label="Restaurant status"
-        className="chip h-8 max-w-36 cursor-pointer appearance-none truncate py-1 pl-3 pr-7 capitalize disabled:cursor-progress disabled:opacity-70"
+        className={`chip status-${selectedStatus} h-8 max-w-36 cursor-pointer appearance-none truncate py-1 pl-3 pr-7 capitalize disabled:cursor-progress disabled:opacity-70`}
         disabled={isPending}
         name="status"
         value={selectedStatus}

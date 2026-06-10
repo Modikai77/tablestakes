@@ -37,16 +37,16 @@ export function AddToListForm({
           <input className="input" name="newListName" placeholder="Weekend ideas, date nights..." required />
         </label>
       ) : null}
-      <AddToListButton />
+      <AddToListButton disabled={!selectedListId} />
     </form>
   );
 }
 
-function AddToListButton() {
+function AddToListButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
 
   return (
-    <button className="button secondary w-fit" disabled={pending} type="submit">
+    <button className="button secondary w-fit" disabled={pending || disabled} type="submit">
       <ListPlus size={16} />
       {pending ? "Adding..." : "Add"}
     </button>

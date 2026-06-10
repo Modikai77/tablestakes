@@ -27,7 +27,7 @@ export default async function RootLayout({
               <span>Tablestakes</span>
             </Link>
             <div className="flex flex-wrap items-center justify-end gap-1">
-              <HeaderNav />
+              {user ? <HeaderNav /> : null}
               <UserMenu user={user} />
             </div>
           </nav>

@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CalendarDays, CircleAlert, CircleCheck, ExternalLink, MapPin, Pencil, Sparkles, Star, Trash } from "lucide-react";
+import { CalendarDays, CircleAlert, CircleCheck, ExternalLink, MapPin, Pencil, Sparkles, Star } from "lucide-react";
 import { AddToListForm } from "@/components/AddToListForm";
+import { DeleteRestaurantForm } from "@/components/DeleteRestaurantForm";
 import { PhotoGallery } from "@/components/PhotoGallery";
 import { VisitForm } from "@/components/VisitForm";
 import { addRestaurantToListAction, deleteRestaurantAction, enrichRestaurantAction } from "@/app/actions";
@@ -62,12 +63,6 @@ export default async function RestaurantDetailPage({
               Enrich
             </button>
           </form>
-          <form action={deleteAction}>
-            <button className="button danger" type="submit">
-              <Trash size={16} />
-              Delete
-            </button>
-          </form>
         </div>
       </section>
 
@@ -95,6 +90,13 @@ export default async function RestaurantDetailPage({
             <Row label="Enrichment" value={enriched ? `Google Places run · ${Math.round(restaurant.enrichmentConfidence! * 100)}% confidence` : "Not enriched"} />
           </dl>
           <AddToListForm action={addToListAction} lists={lists} />
+          <details className="mt-5 border-t border-[var(--line)] pt-4">
+            <summary className="cursor-pointer text-sm font-semibold text-[var(--accent-2)]">Danger zone</summary>
+            <div className="mt-3 grid gap-2 text-sm text-[var(--muted)]">
+              <p>Remove this restaurant and its saved context from your library.</p>
+              <DeleteRestaurantForm action={deleteAction} restaurantName={restaurant.name} />
+            </div>
+          </details>
         </div>
       </section>
 
@@ -121,10 +123,12 @@ export default async function RestaurantDetailPage({
           ))}
           {!restaurant.visits.length ? <div className="panel p-6 text-[var(--muted)]">No visits logged yet.</div> : null}
         </div>
-        <div className="grid gap-3 self-start">
-          <h2 className="text-xl font-semibold">Log a visit</h2>
-          <VisitForm restaurantId={restaurant.id} />
-        </div>
+        <details className="self-start" open={!restaurant.visits.length}>
+          <summary className="cursor-pointer text-xl font-semibold">Log a visit</summary>
+          <div className="mt-3">
+            <VisitForm restaurantId={restaurant.id} />
+          </div>
+        </details>
       </section>
     </div>
   );
